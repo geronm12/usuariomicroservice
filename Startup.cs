@@ -9,6 +9,7 @@ namespace MicroServicioUsuarios
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.OpenApi.Models;
     using System;
     using static IoC.Ioc;
 
@@ -51,9 +52,33 @@ namespace MicroServicioUsuarios
                 options.ExpireTimeSpan = TimeSpan.FromSeconds(15);
             });
 
-             
+
+            #region SwaggerGen
+            ///<summary>
+            /// Agregamos SwaggerGen a nuestra WebApi Restfull.  
+            /// </summary>
+            services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "User M.S",
+                    Version = "v1",
+                    Description = "Micro Servicio para gestionar y administrar usuarios utilizando EF Core 3.1"
+
+                });
+
+            });
+            #endregion
+
+
+            //Agregamos MVC a los servicios, aquí establecemos la compatibilidad con la versión del Framework y en las opciones 
+            //establecemos el EndPointRouting en FALSE para poder usar mvc en Configure.
+
+            services.AddMvc().SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_3_0)
+                .AddMvcOptions(options => options.EnableEndpointRouting = false);
+
+
             //Llamamos a la clase estática para inyectar desde un archivo externo todos los servicios.
-            
             ConfigurationServices(services, Configuration);
 
         }
@@ -65,13 +90,9 @@ namespace MicroServicioUsuarios
             {
                 app.UseDeveloperExceptionPage();
             }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
+         
             app.UseHttpsRedirection();
+
             app.UseStaticFiles();
 
             app.UseRouting();
@@ -80,11 +101,28 @@ namespace MicroServicioUsuarios
 
             app.UseAuthentication();
 
+
+            //Establecemos el uso del MVC y ponemos en las opciones el MapRoute por defecto.
+
+            app.UseMvc(options =>
+            {
+                options.MapRoute(name: "default", template: "{controller-home}/{action=Index}/{Id}");
+            });
+
+            //Establecemos el uso de Swagger.
+
+            app.UseSwagger();
+
+            //Indicamos el uso de swagger UI.
+
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "UserMs");
+            });
+
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllerRoute(
-                    name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapControllers();
             });
         }
     }

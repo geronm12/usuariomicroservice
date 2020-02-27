@@ -12,8 +12,6 @@ namespace MicroServicioUsuarios.AutoMapper
     /// Clase que funciona como perfil para cargar todos los mapeos de entidad-dto-vm, etc es utilizada por <see cref="IMapper"/>
     /// y por <see cref="AutoMapper"/>
     /// </summary>
-
-
     public class MapperProfiles : Profile
     {
         public MapperProfiles()
