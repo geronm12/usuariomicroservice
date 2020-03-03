@@ -1,0 +1,8 @@
+C:\Users\gerol\source\repos\Cine\Cine.Mailer\bin\Debug\netcoreapp3.1\Cine.Mailer.deps.json
+C:\Users\gerol\source\repos\Cine\Cine.Mailer\bin\Debug\netcoreapp3.1\Cine.Mailer.dll
+C:\Users\gerol\source\repos\Cine\Cine.Mailer\obj\Debug\netcoreapp3.1\Cine.Mailer.AssemblyInfoInputs.cache
+C:\Users\gerol\source\repos\Cine\Cine.Mailer\obj\Debug\netcoreapp3.1\Cine.Mailer.AssemblyInfo.cs
+C:\Users\gerol\source\repos\Cine\Cine.Mailer\obj\Debug\netcoreapp3.1\Cine.Mailer.csprojAssemblyReference.cache
+C:\Users\gerol\source\repos\Cine\Cine.Mailer\bin\Debug\netcoreapp3.1\Cine.Mailer.pdb
+C:\Users\gerol\source\repos\Cine\Cine.Mailer\obj\Debug\netcoreapp3.1\Cine.Mailer.dll
+C:\Users\gerol\source\repos\Cine\Cine.Mailer\obj\Debug\netcoreapp3.1\Cine.Mailer.pdb

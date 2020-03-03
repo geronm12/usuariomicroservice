@@ -1,5 +1,6 @@
 ﻿namespace MicroServicioUsuarios.Servicios.UserService
 {
+    using System.Security.Claims;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -7,15 +8,18 @@
     /// </summary>
     public interface IUserService
     {
-        Task<bool>CrearUserAsync(UserDto dto);
+        Task<Result>CrearUserAsync(UserDto dto, string password);
 
 
-        Task<bool>UpdateUserAsync(UserDto dto);
+        Task<Result>UpdateUserAsync(UserDto dto, string userLogged);
 
 
-        Task<bool> LoginAsync(string userName, string password, bool isPersistent);
+        Task<Result> LoginAsync(LoginDto credentials);
 
-        Task SignOutAsync();
+        Task<Result> VerifyEmailAsync(string userId, string emailToken);
+ 
+
+        Task<Result> GetUserProfile(ClaimsPrincipal userName);
 
 
     }

@@ -8,5 +8,8 @@ namespace MicroServicioUsuarios.Data
 {
     public class Users: IdentityUser
     {
+        public string FirstName { get; set; }
+
+        public string LastName { get; set; }
     }
 }

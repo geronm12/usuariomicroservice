@@ -1,0 +1,5 @@
+C:\Users\gerol\Desktop\Mailer\bin\Debug\netcoreapp3.1\Mailer.deps.json
+C:\Users\gerol\Desktop\Mailer\bin\Debug\netcoreapp3.1\Mailer.dll
+C:\Users\gerol\Desktop\Mailer\obj\Debug\netcoreapp3.1\Mailer.csprojAssemblyReference.cache
+C:\Users\gerol\Desktop\Mailer\obj\Debug\netcoreapp3.1\Mailer.AssemblyInfoInputs.cache
+C:\Users\gerol\Desktop\Mailer\obj\Debug\netcoreapp3.1\Mailer.AssemblyInfo.cs

@@ -40,8 +40,9 @@ namespace MicroServicioUsuarios.Data
         /// Desde el appsettings.json se puede encriptar.</param>
         protected override void OnConfiguring(DbContextOptionsBuilder builder)
         {
-            builder.UseMySql(_config["ConnectionStrings:DefaultConnection"]);
-            
+
+             builder.UseMySql(_config["ConnectionString:DefaultConnection"]);
+          
         }
 
         /// <summary>

@@ -1,9 +1,9 @@
 
 namespace MicroServicioUsuarios
 {
+    using Mailer.CineEmailSender;
     using MicroServicioUsuarios.Data;
     using Microsoft.AspNetCore.Builder;
-    using Microsoft.AspNetCore.DataProtection;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Configuration;
@@ -15,8 +15,8 @@ namespace MicroServicioUsuarios
 
     public class Startup
     {
-         
 
+        public static string _myPolicy => "_myPolicy";
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -27,8 +27,8 @@ namespace MicroServicioUsuarios
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-           services.AddDbContext<ApplicationContext>();
-          
+            services.AddDbContext<ApplicationContext>();
+
             services.AddControllersWithViews();
 
             //Configuramos las opciones para el Identity: puede ser para passwords, tokens, etc...
@@ -40,17 +40,19 @@ namespace MicroServicioUsuarios
                 options.Password.RequireLowercase = false;
                 options.Password.RequireUppercase = true;
                 options.Password.RequireNonAlphanumeric = false;
-
+                options.User.RequireUniqueEmail = true;
             });
 
             //Configuramos las opciones para los cookies como tiempo de expiración, ruta para el login, etc.
 
             services.ConfigureApplicationCookie(options =>
             {
-                options.LoginPath = "/login";
+                options.LoginPath = "api/User/login";
 
                 options.ExpireTimeSpan = TimeSpan.FromSeconds(15);
             });
+
+
 
 
             #region SwaggerGen
@@ -67,6 +69,28 @@ namespace MicroServicioUsuarios
 
                 });
 
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Description = "Please insert JWT with Bearer into field",
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey
+                });
+
+
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement {
+                    {
+                           new OpenApiSecurityScheme
+                           {
+                              Reference = new OpenApiReference
+                              {
+                                     Type = ReferenceType.SecurityScheme,
+                                     Id = "Bearer"
+                              }
+                           },
+                           new string[] { }
+                    }
+                });
             });
             #endregion
 
@@ -75,12 +99,30 @@ namespace MicroServicioUsuarios
             //establecemos el EndPointRouting en FALSE para poder usar mvc en Configure.
 
             services.AddMvc().SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_3_0)
-                .AddMvcOptions(options => options.EnableEndpointRouting = false);
+                    .AddMvcOptions(options => options.EnableEndpointRouting = false);
 
 
-            //Llamamos a la clase estática para inyectar desde un archivo externo todos los servicios.
-            ConfigurationServices(services, Configuration);
+                //Llamamos a la clase estática para inyectar desde un archivo externo todos los servicios.
+                ConfigurationServices(services, Configuration);
 
+            #region Cambiar
+            #warning CAMBIAR
+            ConfigExtension ext = new ConfigExtension(Configuration);
+
+            Servicios.Extensiones.ConfigExtension ext2 = new Servicios.Extensiones.ConfigExtension(Configuration);
+
+            #endregion
+
+
+            //Configuramos el cors para que se pueda utilizar la API desde cualquier origen (No recomendable para deploy
+            //Si para produccion
+            #warning CAMBIAR ANTES DEL DEPLOY
+
+            services.AddCors(options => options.AddPolicy(_myPolicy, options =>
+                options.WithOrigins("*").WithMethods("*").WithHeaders("*")));
+
+
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -101,6 +143,8 @@ namespace MicroServicioUsuarios
 
             app.UseAuthentication();
 
+            app.UseSession();
+
 
             //Establecemos el uso del MVC y ponemos en las opciones el MapRoute por defecto.
 
@@ -119,6 +163,9 @@ namespace MicroServicioUsuarios
             {
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "UserMs");
             });
+
+            app.UseCors(_myPolicy);
+
 
             app.UseEndpoints(endpoints =>
             {
