@@ -132,6 +132,7 @@ C:\Users\gerol\Desktop\MicroServicioUsuarios\bin\Debug\netcoreapp3.1\Mailer\bin\
 C:\Users\gerol\Desktop\MicroServicioUsuarios\bin\Debug\netcoreapp3.1\Mailer\obj\Cine.Mailer.csproj.nuget.dgspec.json
 C:\Users\gerol\Desktop\MicroServicioUsuarios\bin\Debug\netcoreapp3.1\Mailer\obj\Mailer.csproj.nuget.dgspec.json
 C:\Users\gerol\Desktop\MicroServicioUsuarios\bin\Debug\netcoreapp3.1\Mailer\obj\project.assets.json
+C:\Users\gerol\Desktop\MicroServicioUsuarios\bin\Debug\netcoreapp3.1\SendGrid.dll
+C:\Users\gerol\Desktop\MicroServicioUsuarios\bin\Debug\netcoreapp3.1\Twilio.dll
 C:\Users\gerol\Desktop\MicroServicioUsuarios\obj\Debug\netcoreapp3.1\MicroServicioUsuarios.MvcApplicationPartsAssemblyInfo.cs
 C:\Users\gerol\Desktop\MicroServicioUsuarios\obj\Debug\netcoreapp3.1\MicroServicioUsuarios.MvcApplicationPartsAssemblyInfo.cache
-C:\Users\gerol\Desktop\MicroServicioUsuarios\bin\Debug\netcoreapp3.1\SendGrid.dll

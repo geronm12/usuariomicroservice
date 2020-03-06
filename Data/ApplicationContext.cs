@@ -2,6 +2,7 @@
 
 namespace MicroServicioUsuarios.Data
 {
+    using MicroServicioUsuarios.Data.MetaData;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
@@ -52,10 +53,11 @@ namespace MicroServicioUsuarios.Data
         /// <param name="builder"></param>
         protected override void OnModelCreating(ModelBuilder builder)
         {
+             
             base.OnModelCreating(builder);
         }
 
-
+       
     }
 }
 

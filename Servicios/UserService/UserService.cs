@@ -1,21 +1,24 @@
 ﻿namespace MicroServicioUsuarios.Servicios.UserService
 {
     using global::AutoMapper;
-    using MicroServicioUsuarios.Data;
-    using Microsoft.AspNetCore.Identity;
-    using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Authentication;
-    using static MicroServicioUsuarios.AutoMapper.AutoMapperService;
-    using System.Web;
     using Mailer;
-    using Mailer.CineEmailSender;
-    using Newtonsoft.Json;
+    using MicroServicioUsuarios.Data;
     using MicroServicioUsuarios.Servicios.Extensiones;
-    using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.Identity;
+    using Newtonsoft.Json;
     using System.Security.Claims;
+    using System.Threading.Tasks;
+    using static MicroServicioUsuarios.AutoMapper.AutoMapperService;
+    using Twilio;
+    using Twilio.Rest.Api.V2010.Account;
+    using MicroServicioUsuarios.Whatsapp;
+    using MicroServicioUsuarios.Whatsapp.ExtensionesYHelpers;
+    using System.Linq;
+    using Microsoft.EntityFrameworkCore;
 
     /// <summary>
     /// Clase que implementa la interfaz <see cref="IUserService"/>
+    /// Maneja las API Calls básicas de un Usuario (Login, Create, Update, ChangePassword,etc)
     /// </summary>
     public class UserService : IUserService
     {
@@ -38,12 +41,11 @@
 
         protected SignInManager<Users> _userSignIn;
 
-        //protected Microsoft.AspNetCore.Http.HttpContext HttpContext;
-
         private readonly IMapper _mapper;
 
         private readonly IEmailSender _sender;
 
+        
         #endregion
 
         #region Constructor
@@ -57,9 +59,10 @@
             _userSignIn = userSignIn;
 
             _mapper = CrearMapa();
-
-            
+           
             _sender = sender;
+
+          
 
         }
         #endregion
@@ -75,7 +78,7 @@
         {
             Users newUser = _mapper.Map<Users>(dto);
 
-            var result =  await _userManager.CreateAsync(newUser, password);
+            var result = await _userManager.CreateAsync(newUser, password);
 
             if (result.Succeeded)
             {
@@ -84,12 +87,6 @@
 
                 var emailVerificationCode = await _userManager.GenerateEmailConfirmationTokenAsync(newUser);
 
-                var Url = "localhost:5001/swagger";
-
-                var confirmationUrl = $"http://{Url}/api/verify/Email" +
-                    $"/{HttpUtility.UrlEncode(userIdentity.Id)}/{HttpUtility.UrlEncode(emailVerificationCode)}";
-
-               
                 return new Result
                 {
                     ErrorMsg = null,
@@ -115,7 +112,7 @@
                 };
             }
 
-          
+
 
         }
 
@@ -129,7 +126,7 @@
         /// <returns></returns>
 
         public async Task<Result> UpdateUserAsync(UserDto dto, string userLogged)
-        { 
+        {
             //Buscamos el usuario por el nombre del usuario que se encuentra Loggeado
             // NOTA: Se pasa el nombre del usuario que se encuentra loggeado porque si el usuario realizó algún
             // cambio en su nombre de usuario la búsqueda siempre devolvera un NULL.
@@ -160,21 +157,21 @@
                 foundUser.FirstName = dto.FirstName;
             //Si el apellido del dto no es nulo..
             if (dto.LastName != null)
-               foundUser.LastName = dto.LastName;
+                foundUser.LastName = dto.LastName;
             //Si el email no es nulo y es distinto del email registrado...
             if (dto.Email != null && !string.Equals(dto.Email.Replace(" ", ""), foundUser.NormalizedEmail))
                 foundUser.Email = dto.Email;
-                //Cambiamos la confirmación del usuario  
-               foundUser.EmailConfirmed = false;
-               //E indicamos al booleano que se cambió el email...
-                emailChanged = true;
+            //Cambiamos la confirmación del usuario  
+            foundUser.EmailConfirmed = false;
+            //E indicamos al booleano que se cambió el email...
+            emailChanged = true;
             //Si el nombre de usuario no es nulo...
             if (dto.UserName != null)
                 foundUser.UserName = dto.UserName;
 
             //Si el mail cambió, se mandará nuevamente el mail de verificación
 
-            if(emailChanged)
+            if (emailChanged)
             {
                 var token = await _userManager.GenerateEmailConfirmationTokenAsync(foundUser);
 
@@ -207,7 +204,7 @@
                 ErrorMsg = "Ocurrió un error al actualizar al usuario"
 
             };
-            
+
 
 
 
@@ -250,8 +247,9 @@
 
             var isValidPassword = await _userManager.CheckPasswordAsync(user, credenciales.Password);
 
+  
             if (!isValidPassword)
-                    return error;
+                return error;
 
             var userName = user.UserName;
 
@@ -268,7 +266,7 @@
 
 
             };
-            
+
 
         }
         #endregion
@@ -289,7 +287,7 @@
 
 
             emailToken = emailToken.Replace("%2F", "/").Replace("%2F", "/");
-           
+
             emailToken = emailToken.Replace("%2B", "+").Replace("%2B", "+");
 
             emailToken = emailToken.Replace("%3D", "=").Replace("%3D", "=");
@@ -298,7 +296,7 @@
             {
                 ErrorMsg = "Error al encontrar el usuario",
                 Body = null,
-                Response = false 
+                Response = false
             };
 
 
@@ -312,7 +310,7 @@
                 resultError.ErrorMsg = "Su Mail ya se encuentra verificado";
                 return resultError;
             }
-                
+
 
             //Si el usuario existe:
             //Verificamos el token del email
@@ -323,9 +321,9 @@
             if (result.Succeeded)
                 return new Result
                 {
-                   ErrorMsg = null,
-                   Body = "Mail Verficado",
-                   Response = true
+                    ErrorMsg = null,
+                    Body = "Mail Verficado",
+                    Response = true
                 };
 
             resultError.ErrorMsg = "Token Inválido";
@@ -336,9 +334,9 @@
         #endregion
 
 
-        public async Task<Result> GetUserProfile(ClaimsPrincipal userName)
+        public async Task<Result> GetUserProfile(ClaimsPrincipal request)
         {
-            var user = await _userManager.GetUserAsync(userName);
+            var user = await _userManager.GetUserAsync(request);
 
 
             if (user != null)
@@ -347,7 +345,7 @@
                     Response = true,
                     ErrorMsg = null,
                     Body = JsonConvert.SerializeObject(user)
-                 };
+                };
 
 
             return new Result
@@ -358,5 +356,111 @@
             };
         }
 
+        ///<summary>
+        ///Método que genera el token y busca al Usuario por su Email
+        ///<param name="usernameOrEmail">Nombre de Usuario o Mail del Usuario</param>
+        ///</summary>
+        ///<returns>Devuelve un <see cref="Result"/> con los datos necesarios para crear la Url 
+        ///<parm name= "Token">Token Generado</parm>
+        ///<parm name= "Email">Email del usuario</parm></returns>
+        ///
+        #region Mail para resetear password
+        /// <summary>
+        /// Metodo para solicitar el reseteo de password en caso de no recordarlo
+        /// </summary>
+        /// <param name="userId">Mail del usuario</param>
+        /// <returns><see cref="Result"/></returns>
+        public async Task<Result> ResetPasswordEmail(string usernameOrEmail)
+        {
+
+            //Buscamos el usuario por nombre de usuario o Email
+
+            var user = usernameOrEmail.Contains("@") ? await _userManager.FindByEmailAsync(usernameOrEmail)
+                : await _userManager.FindByNameAsync(usernameOrEmail);
+
+            //Resultado de error en caso de que hubiere
+
+            var resulError = new Result
+            {
+                ErrorMsg = "Error al encontrar el Usuario",
+                Body = null,
+                Response = false,
+            };
+
+            //Si el usuario es nulo, devolvemos el error
+
+            if (user == null)
+                return resulError;
+
+
+            var resetPasswordCode = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            //var Url = "localhost:5001/swagger";
+
+            //var resetPasswordUrl = $"http://{Url}/api/password/reset" +
+            //       $"/{HttpUtility.UrlEncode(user.Email)}/{HttpUtility.UrlEncode(resetPasswordCode)}";
+
+            return new Result
+            {
+                ErrorMsg = null,
+                Body = JsonConvert.SerializeObject(
+                new
+                {
+                    Email = user.Email,
+                    UserName = user.UserName,
+                    PasswordCode = resetPasswordCode
+                }),
+                Response = true
+            };
+
+
+        }
+        #endregion
+
+        /// <summary>
+        /// Método que resetea el password del usuario.
+        /// </summary>
+        /// <param name="dto">Dto</param>
+        /// <returns></returns>
+
+        #region Reseteo de Password
+        public async Task<Result> ResetPassword(ResetPasswordDto dto)
+        {
+            var user = await _userManager.FindByEmailAsync(dto.Mail);
+
+            var error = new Result
+            {
+
+                ErrorMsg = "Ocurrió un error al cambiar el password, por favor solicite nuevamente su cambio.",
+                Response = false,
+                Body = null
+
+            };
+
+
+            if (user == null)
+                return error;
+
+
+
+            var result = await _userManager.ResetPasswordAsync(user, dto.Token, dto.NewPassword);
+
+            if (result.Succeeded)
+                return new Result
+                {
+                    ErrorMsg = null,
+                    Body = "El password se cambió correctamente",
+                    Response = true
+                };
+
+
+            return error;
+        }
+
+
+
+        #endregion
+
+         
     }
 }

@@ -1,5 +1,6 @@
 ﻿namespace MicroServicioUsuarios.Servicios.UserService
 {
+    using MicroServicioUsuarios.Whatsapp;
     using System.Security.Claims;
     using System.Threading.Tasks;
 
@@ -19,8 +20,12 @@
         Task<Result> VerifyEmailAsync(string userId, string emailToken);
  
 
-        Task<Result> GetUserProfile(ClaimsPrincipal userName);
+        Task<Result> GetUserProfile(ClaimsPrincipal request);
 
+        Task<Result> ResetPasswordEmail(string userNameOrEmail); 
 
+        Task<Result> ResetPassword(ResetPasswordDto dto);
+
+        
     }
 }

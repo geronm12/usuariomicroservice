@@ -4,6 +4,8 @@ using Mailer.CineEmailSender;
 using Mailer.Templates;
 using MicroServicioUsuarios.Data;
 using MicroServicioUsuarios.Servicios.UserService;
+using MicroServicioUsuarios.Whatsapp;
+using MicroServicioUsuarios.Whatsapp.ExtensionesYHelpers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -94,7 +96,14 @@ namespace MicroServicioUsuarios.IoC
 
             services.AddTransient<IEmailTemplateSender,EmailTemplateSender>();
 
-             
+            services.AddTransient<IWhatsappSender, WhatsappSender>();
+
+            services.AddHttpContextAccessor();
+
+            services.AddTransient<WhatsappCookiesCreator>();
+
+
+
         }
 
         #endregion
