@@ -1,19 +1,19 @@
 ﻿namespace MicroServicioUsuarios.Controllers
 {
     using Mailer.CineEmailSender;
+    using MicroServicioUsuarios.Servicios.Extensiones;
     using MicroServicioUsuarios.Servicios.UserService;
     using MicroServicioUsuarios.ViewModels;
-    using Microsoft.AspNetCore.Authentication.JwtBearer;
+    using MicroServicioUsuarios.Whatsapp;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Cors;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Configuration;
     using Newtonsoft.Json;
     using System;
     using System.Threading.Tasks;
-    using System.Web;
 
+    [AllowAnonymous]
     [Route("api/[controller]")]
     public partial class UserController : Controller
     {
@@ -21,19 +21,23 @@
 
         private readonly IUserService _service;
 
+        private readonly IWhatsappSender _sender;
+
         private delegate string Mensaje(string displayName, string url);
 
-        public UserController(IConfiguration config, IUserService service)
+        public UserController(IConfiguration config, IUserService service, IWhatsappSender sender)
         {
 
             _config = config;
 
             _service = service;
 
+            _sender = sender;
         }
  
 
         [HttpPost]
+        [EnableCors("_myPolicy")]
         [Route("login")]
         public async Task<IActionResult> Login([FromBody]LoginViewModel model)
         {
@@ -268,6 +272,67 @@
             return BadRequest(result);
         }
 
+        [HttpGet]
+        [EnableCors("_myPolicy")]
+        [AuthorizeToken]
+        [Route("profile")]
+        public async Task<IActionResult> GetUserProfile()
+        {
+            if (HttpContext.User != null)
+            {
 
+                var usuario = await _service.GetUserProfile(HttpContext.User);
+
+                if (usuario != null)
+                    return Ok(JsonConvert.SerializeObject(usuario));
+
+                return BadRequest();
+
+            }
+
+
+
+            return Ok();
+        }
+
+
+        [HttpPost]
+        [EnableCors("_myPolicy")]
+        [Route("whatsapp")]
+       
+        public async Task<IActionResult> SendWhatsapp(WhatsappMessageViewModel model, string email)
+        {
+
+
+            var mensaje = new WhatsappSenderDto();
+            mensaje.CodPais = model.CodigoDePais;
+
+            mensaje.CodCiudad = model.CodigoDeCiudad;
+            mensaje.NumeroCelular = model.NumCel;
+            mensaje.Verificacion = Whatsapp.ExtensionesYHelpers.FormaVerificacion.Whatsapp;
+
+            var result = await _sender.EnviarMensaje(mensaje, Whatsapp.ExtensionesYHelpers.FormaVerificacion.Whatsapp, email);
+
+            if (result.Succesful)
+                return Ok(result);
+
+            return BadRequest();
+        }
+
+        [HttpPost]
+        [EnableCors("_myPolicy")]
+        [Route("whatsapp/verify")]
+        public async Task<IActionResult> VerifiCode(string codigo, string usernameOrEmail)
+        {
+
+            var response = await _sender.VerificarCódigo(new WhastappUserVerificationDto { NombreUsuarioOEmail = usernameOrEmail, Codigo = codigo });
+
+            if (response.Succesful)
+                return Ok(response);
+
+
+            return BadRequest();
+
+        }
     }
 }
