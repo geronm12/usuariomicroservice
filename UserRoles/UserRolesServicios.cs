@@ -241,26 +241,171 @@
         #endregion
 
         #region Obtener Usuarios en un Rol
-        public Task<UserRolResult> GetUsersInRolAsync(string roleName)
+        public async Task<UserRolResult> GetUsersInRolAsync(string roleName)
         {
-            throw new NotImplementedException();
+            IsInRole = await _roleManager.RoleExistsAsync(roleName);
+
+            if (!IsInRole)
+            {
+                errorResult.Errores.Add(new ErrorMsg
+                {
+                    ErrorCode = HttpStatusCode.NotFound.ToString(),
+                    ErrorMessagge = "No se encontró el Rol"
+
+                });
+                return errorResult;
+            }
+
+            var usersInRol = await _userManager.GetUsersInRoleAsync(roleName);
+
+            if (usersInRol.Count > 0)
+                return new UserRolResult
+                {
+                    Errores = null,
+                    Succesfull = true,
+                    Roles = new List<RolDto> { new RolDto {Name = roleName } },
+                    Usuario = null,
+                    Body = JsonConvert.SerializeObject(new { Usuarios = usersInRol, Mensaje = "El Usario está Nulo porque se solicitó una lista." })
+                };
+
+
+
+            errorResult.Errores.Add(new ErrorMsg
+            {
+                ErrorCode= HttpStatusCode.NotFound.ToString(),
+                ErrorMessagge = "No se encontró ningún usuario relacionado al rol"
+            });
+            return errorResult;
+
         }
         #endregion
 
         #region Remover de un Rol específico
 
-        public Task<UserRolResult> RemoveFromRolAsync(string userNameOrEmail, string roleName)
+        public async Task<UserRolResult> RemoveFromRolAsync(string userNameOrEmail, string roleName)
         {
-            throw new NotImplementedException();
+            var usuario = userNameOrEmail.Contains("@") ?
+               await _userManager.FindByEmailAsync(userNameOrEmail)
+               : await _userManager.FindByNameAsync(userNameOrEmail);
+
+            IsInRole = await _roleManager.RoleExistsAsync(roleName);
+
+
+            if (usuario == null)
+            {
+                errorResult.Errores.Add(new ErrorMsg
+                {
+                    ErrorCode = HttpStatusCode.NotFound.ToString(),
+                    ErrorMessagge = "No se encontró el usuario"
+
+                });
+                return errorResult;
+            }
+
+            if (!IsInRole)
+            {
+                errorResult.Errores.Add(new ErrorMsg { ErrorCode = HttpStatusCode.NotFound.ToString(), ErrorMessagge = "El rol que está intentando acceder no existe" });
+                return errorResult;
+            }
+             
+
+            var result = await _userManager.RemoveFromRoleAsync(usuario, roleName);
+
+            if (result.Succeeded)
+            {
+                return new UserRolResult
+                {
+                    Errores = null,
+                    Succesfull = true,
+                    Body = JsonConvert.SerializeObject(new { }),
+                    Roles = new List<RolDto> { new RolDto { Name = roleName } },
+                    Usuario = _mapper.Map<UserDto>(usuario)
+                };
+            }
+            else
+            {
+                foreach (var item in result.Errors)
+                {
+                    errorResult.Errores.Add((ErrorMsg)item);
+                }
+
+                return errorResult;
+            }    
+
         }
 
         #endregion
 
 
         #region Remover de Varios Roles
-        public Task<UserRolResult> RemoveFromRolesAsync(string userNameOrEmail, List<string> roles)
+        public async Task<UserRolResult> RemoveFromRolesAsync(string userNameOrEmail, List<string> roles)
         {
-            throw new NotImplementedException();
+            var usuario = userNameOrEmail.Contains("@") ?
+              await _userManager.FindByEmailAsync(userNameOrEmail)
+              : await _userManager.FindByNameAsync(userNameOrEmail);
+
+            if (usuario == null)
+            {
+                errorResult.Errores.Add(new ErrorMsg
+                {
+                    ErrorCode = HttpStatusCode.NotFound.ToString(),
+                    ErrorMessagge = "No se encontró el usuario"
+
+                });
+                return errorResult;
+            }
+
+            Dictionary<string, bool> verificar = new Dictionary<string, bool>();
+
+            foreach (var item in roles)
+            {
+                IsInRole = await _roleManager.RoleExistsAsync(item);
+
+                verificar.Add(item, IsInRole);
+            }
+
+            var hayFalse = verificar.Where(x => x.Value == false);
+
+            if (hayFalse.Count() > 0)
+            {
+                foreach (var item in hayFalse)
+                {
+                    errorResult.Errores.Add(new ErrorMsg
+                    {
+                        ErrorCode = HttpStatusCode.NotFound.ToString(),
+                        ErrorMessagge = $"No se encontró el rol {item.Key}"
+                    });
+
+                }
+
+
+                return errorResult;
+            }
+
+
+            var result = await _userManager.RemoveFromRolesAsync(usuario, roles);
+
+            if (result.Succeeded)
+                return new UserRolResult
+                {
+                    Succesfull = true,
+                    Errores = null,
+                    Usuario = _mapper.Map<UserDto>(usuario),
+                    Roles = _service.ConvertToRolDto(roles),
+                    Body = JsonConvert.SerializeObject(new {Http = HttpStatusCode.OK,
+                        Mensaje = "Se removió al usuario de todos los roles de forma exitosa" })
+
+                };
+
+
+            foreach (var item in result.Errors)
+            {
+                errorResult
+                    .Errores.Add((ErrorMsg)item);
+            }
+
+            return errorResult;
+
         }
 
         #endregion
