@@ -3,7 +3,9 @@ using Mailer;
 using Mailer.CineEmailSender;
 using Mailer.Templates;
 using MicroServicioUsuarios.Data;
+using MicroServicioUsuarios.Roles;
 using MicroServicioUsuarios.Servicios.UserService;
+using MicroServicioUsuarios.UserRoles;
 using MicroServicioUsuarios.Whatsapp;
 using MicroServicioUsuarios.Whatsapp.ExtensionesYHelpers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -102,6 +104,9 @@ namespace MicroServicioUsuarios.IoC
 
             services.AddTransient<WhatsappCookiesCreator>();
 
+            services.AddTransient<IRolesServicios, RolesServicios>();
+
+            services.AddTransient<IUserRolesServicios, UserRolesServicios>();
 
 
         }
