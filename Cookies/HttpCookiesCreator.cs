@@ -30,7 +30,7 @@ namespace MicroServicioUsuarios.Cookies
 
         }
 
-
+        
          public virtual void Set(string Key)
          {
 
@@ -46,6 +46,8 @@ namespace MicroServicioUsuarios.Cookies
         {
             _accesor.HttpContext.Response.Cookies.Delete(key);
         }
+
+         
 
 
 
