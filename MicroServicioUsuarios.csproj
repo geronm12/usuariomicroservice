@@ -26,10 +26,6 @@
     <PackageReference Include="Twilio" Version="5.37.5" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="UserRoles\" />
-  </ItemGroup>
-
 
 
 </Project>
